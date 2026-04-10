@@ -1,0 +1,89 @@
+# ============================================================
+# .gitignore — Maternal Mortality Research
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.ipynb_checkpoints
+
+# Data files (large raw data should not be committed)
+data/raw/*.csv
+data/raw/*.xlsx
+data/raw/*.json
+data/raw/*.zip
+data/external/*.csv
+data/external/*.xlsx
+
+# Keep processed data structure but not files
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Results (generated outputs)
+results/figures/*.png
+results/figures/*.jpg
+results/figures/*.pdf
+results/tables/*.csv
+!results/figures/.gitkeep
+!results/tables/.gitkeep
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# pytest
+.pytest_cache/
