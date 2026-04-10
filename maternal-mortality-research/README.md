@@ -120,7 +120,7 @@ maternal-mortality-research/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/maternal-mortality-research.git
+git clone https://github.com/sharma20kabya-cloud/maternal-mortality-research.git
 cd maternal-mortality-research
 ```
 
@@ -176,19 +176,15 @@ Contributions are welcome! Please:
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+.
 
 ---
 
 ## 👩‍🔬 Author
 
-**[Your Name]**
-Department of Public Health / Sociology
-📧 your.email@university.edu
-🔗 [LinkedIn](https://linkedin.com) | [ResearchGate](https://researchgate.net)
-
+**[Kabya Sharma]**
+📧 kabyasharma69@gmail.com
+🔗 [LinkedIn](www.linkedin.com/in/kabya-sharma)
 ---
 
 > *"Every maternal death is a tragedy — and most are preventable."* — WHO
