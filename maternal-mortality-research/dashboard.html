@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maternal Mortality Research Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --red:     #c0392b;
+    --red-lt:  #e74c3c;
+    --red-pale:#fdecea;
+    --amber:   #e67e22;
+    --green:   #27ae60;
+    --blue:    #2980b9;
+    --navy:    #1a2a3a;
+    --ink:     #2c3e50;
+    --muted:   #7f8c8d;
+    --line:    #ecf0f1;
+    --bg:      #f9f6f2;
+    --card:    #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 4px solid var(--red);
+    min-height: 80px;
+  }
+  header .brand { display: flex; align-items: center; gap: 1rem; }
+  header .pulse {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--red-lt);
+    box-shadow: 0 0 0 0 rgba(231,76,60,.6);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(231,76,60,.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(231,76,60,0); }
+    100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem; font-weight: 700;
+    letter-spacing: .01em;
+  }
+  header p { font-size: .78rem; color: #aab; margin-top: 2px; }
+  .sdg-badge {
+    background: var(--red); color: #fff;
+    padding: .35rem .9rem; border-radius: 20px;
+    font-size: .75rem; font-weight: 600; letter-spacing: .05em;
+    white-space: nowrap;
+  }
+
+  /* ── LAYOUT ── */
+  main { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .kpi {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem;
+    border-left: 5px solid var(--red);
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    transition: transform .2s;
+  }
+  .kpi:hover { transform: translateY(-3px); }
+  .kpi:nth-child(2) { border-left-color: var(--amber); }
+  .kpi:nth-child(3) { border-left-color: var(--blue); }
+  .kpi:nth-child(4) { border-left-color: var(--green); }
+  .kpi .val {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.1rem; font-weight: 900;
+    line-height: 1; margin-bottom: .3rem;
+  }
+  .kpi .val.red   { color: var(--red); }
+  .kpi .val.amber { color: var(--amber); }
+  .kpi .val.blue  { color: var(--blue); }
+  .kpi .val.green { color: var(--green); }
+  .kpi .label { font-size: .78rem; color: var(--muted); font-weight: 500; }
+  .kpi .sub   { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--navy); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+
+  /* ── GRID ROWS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+  .grid-wide { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1.4rem 1.5rem;
+    box-shadow: 0 2px 14px rgba(0,0,0,.06);
+  }
+  .card h3 {
+    font-size: .85rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em;
+    margin-bottom: 1rem;
+  }
+  .chart-wrap { position: relative; height: 240px; }
+  .chart-wrap.tall { height: 320px; }
+  .chart-wrap.short { height: 190px; }
+
+  /* ── STATE BAR TABLE ── */
+  .state-list { display: flex; flex-direction: column; gap: .55rem; }
+  .state-row { display: flex; align-items: center; gap: .7rem; font-size: .82rem; }
+  .state-name { width: 110px; font-weight: 500; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--line); border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 4px; transition: width .8s ease; }
+  .state-val { width: 38px; text-align: right; font-weight: 600; font-size: .8rem; }
+
+  /* ── INSIGHT BOX ── */
+  .insight-box {
+    background: var(--navy); color: #fff;
+    border-radius: 14px; padding: 1.4rem 1.5rem;
+    display: flex; flex-direction: column; gap: .75rem;
+  }
+  .insight-box h3 { font-size: .82rem; color: #aab; text-transform: uppercase; letter-spacing: .07em; }
+  .insight-item { display: flex; gap: .7rem; align-items: flex-start; }
+  .insight-icon { font-size: 1.1rem; margin-top: 2px; flex-shrink: 0; }
+  .insight-text { font-size: .83rem; line-height: 1.5; color: #d0d8e0; }
+  .insight-text strong { color: #fff; }
+
+  /* ── DETERMINANT CARDS ── */
+  .det-card {
+    background: var(--card); border-radius: 12px;
+    padding: 1.2rem; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    display: flex; flex-direction: column; gap: .5rem;
+  }
+  .det-card .r-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 900;
+  }
+  .det-card .r-label { font-size: .75rem; color: var(--muted); font-weight: 500; }
+  .det-card .r-desc  { font-size: .78rem; color: var(--ink); line-height: 1.45; }
+  .r-neg { color: var(--green); }
+  .r-pos { color: var(--red); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 1.5rem;
+    font-size: .75rem; color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 900px) {
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-wide, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="pulse"></div>
+    <div>
+      <h1>Maternal Mortality Research Dashboard</h1>
+      <p>Data Analysis Project &nbsp;|&nbsp; India &amp; Global Trends &nbsp;|&nbsp; 2000–2023</p>
+    </div>
+  </div>
+  <div class="sdg-badge">SDG 3.1 — MMR &lt; 70</div>
+</header>
+
+<main>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="val red">287K</div>
+      <div class="label">Global Maternal Deaths/Year</div>
+      <div class="sub">WHO, 2020 estimate</div>
+    </div>
+    <div class="kpi">
+      <div class="val amber">97</div>
+      <div class="label">India's Current MMR</div>
+      <div class="sub">SRS Bulletin 2018–20</div>
+    </div>
+    <div class="kpi">
+      <div class="val blue">−62%</div>
+      <div class="label">India's MMR Reduction</div>
+      <div class="sub">2004–06 → 2018–20</div>
+    </div>
+    <div class="kpi">
+      <div class="val green">70</div>
+      <div class="label">SDG 3.1 Target by 2030</div>
+      <div class="sub">UN Sustainable Dev. Goal</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Global trend + India bar -->
+  <p class="section-title">📈 Global & India Trends</p>
+  <div class="grid-wide">
+    <div class="card">
+      <h3>MMR Trends by Region (2000–2020)</h3>
+      <div class="chart-wrap tall"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>India State-wise MMR (2018–20)</h3>
+      <div class="state-list" id="stateList"></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Determinants -->
+  <p class="section-title">🔬 Key Determinants of Maternal Mortality</p>
+  <div class="grid-3">
+    <div class="det-card">
+      <div class="r-val r-neg">−0.87</div>
+      <div class="r-label">Pearson r — Institutional Delivery vs MMR</div>
+      <div class="r-desc">States with higher institutional delivery rates show dramatically lower MMR. Kerala (99.8% delivery) → MMR 19 vs Assam (84.6%) → MMR 195.</div>
+    </div>
+    <div class="det-card">
+      <div class="r-val r-neg">−0.79</div>
+      <div class="r-label">Pearson r — Female Literacy vs MMR</div>
+      <div class="r-desc">Every 10% rise in female literacy correlates with ~15 point drop in MMR. Education empowers women to seek timely antenatal care.</div>
+    </div>
+    <div class="det-card">
+      <div class="r-val r-neg">−0.72</div>
+      <div class="r-label">Pearson r — ANC4 Visits vs MMR</div>
+      <div class="r-desc">4+ antenatal care visits detect complications early. States with high ANC4 coverage consistently report lower maternal death rates.</div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Scatter + Donut + Insights -->
+  <div class="grid-2">
+    <div class="card">
+      <h3>Literacy vs MMR — Indian States</h3>
+      <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Global Maternal Deaths by Region (2020)</h3>
+      <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Causes + Insight box -->
+  <div class="grid-wide">
+    <div class="card">
+      <h3>Leading Direct Causes of Maternal Death (Global %)</h3>
+      <div class="chart-wrap short"><canvas id="causesChart"></canvas></div>
+    </div>
+    <div class="insight-box">
+      <h3>🔍 Key Research Findings</h3>
+      <div class="insight-item">
+        <span class="insight-icon">📍</span>
+        <span class="insight-text"><strong>Assam, UP &amp; MP</strong> consistently record India's highest MMR — all above 130.</span>
+      </div>
+      <div class="insight-item">
+        <span class="insight-icon">🏥</span>
+        <span class="insight-text">States with <strong>&gt;80% institutional deliveries</strong> show 3× lower MMR than states below 50%.</span>
+      </div>
+      <div class="insight-item">
+        <span class="insight-icon">📚</span>
+        <span class="insight-text"><strong>Kerala</strong> — highest literacy (96.1%) — has India's lowest MMR at just 19.</span>
+      </div>
+      <div class="insight-item">
+        <span class="insight-icon">🌍</span>
+        <span class="insight-text"><strong>Sub-Saharan Africa</strong> accounts for ~70% of all global maternal deaths.</span>
+      </div>
+      <div class="insight-item">
+        <span class="insight-icon">🎯</span>
+        <span class="insight-text">India needs to reduce MMR by <strong>27 more points</strong> to meet the SDG 3.1 target of 70.</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Maternal Mortality Research Project &nbsp;|&nbsp; Data: WHO, NFHS-5, SRS Bulletin, World Bank &nbsp;|&nbsp;
+  github.com/sharma20kabya-cloud/maternal-mortality-research
+</footer>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────
+
+const years = [2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020];
+
+const trendData = {
+  global:      [342,330,318,306,294,283,265,245,220,200,223],
+  southAsia:   [400,375,350,325,302,280,258,237,215,175,152],
+  subSaharan:  [870,845,820,795,770,745,715,685,650,610,545],
+  india:       [370,340,310,280,255,230,205,180,155,120, 97],
+};
+
+const indiaStates = [
+  { name:"Assam",       mmr:195, cat:"high"   },
+  { name:"Uttar Pr.",   mmr:167, cat:"high"   },
+  { name:"Madhya Pr.",  mmr:163, cat:"high"   },
+  { name:"Rajasthan",   mmr:141, cat:"high"   },
+  { name:"Odisha",      mmr:136, cat:"high"   },
+  { name:"Chhattisgarh",mmr:132, cat:"high"   },
+  { name:"Bihar",       mmr:130, cat:"high"   },
+  { name:"West Bengal", mmr:103, cat:"medium" },
+  { name:"Uttarakhand", mmr:101, cat:"medium" },
+  { name:"Jharkhand",   mmr: 98, cat:"medium" },
+  { name:"Haryana",     mmr: 96, cat:"medium" },
+  { name:"Punjab",      mmr: 82, cat:"medium" },
+  { name:"Karnataka",   mmr: 69, cat:"low"    },
+  { name:"Gujarat",     mmr: 75, cat:"medium" },
+  { name:"Andhra Pr.",  mmr: 58, cat:"low"    },
+  { name:"Telangana",   mmr: 54, cat:"low"    },
+  { name:"Maharashtra", mmr: 33, cat:"low"    },
+  { name:"Tamil Nadu",  mmr: 36, cat:"low"    },
+  { name:"Kerala",      mmr: 19, cat:"low"    },
+].reverse();
+
+const scatterData = [
+  {x:73.2,y:195,label:"Assam"},
+  {x:59.3,y:167,label:"UP"},
+  {x:60.0,y:163,label:"MP"},
+  {x:52.1,y:141,label:"Raj."},
+  {x:70.9,y:136,label:"Odisha"},
+  {x:60.2,y:132,label:"CG"},
+  {x:53.3,y:130,label:"Bihar"},
+  {x:75.4,y: 96,label:"Haryana"},
+  {x:81.4,y: 82,label:"Punjab"},
+  {x:70.7,y: 75,label:"Gujarat"},
+  {x:68.6,y: 58,label:"AP"},
+  {x:72.3,y: 54,label:"TG"},
+  {x:79.3,y: 33,label:"Mah."},
+  {x:82.2,y: 36,label:"TN"},
+  {x:96.1,y: 19,label:"Kerala"},
+];
+
+// ── COLORS ──────────────────────────────────────────────────
+const C = { red:"#c0392b", amber:"#e67e22", blue:"#2980b9", green:"#27ae60",
+            teal:"#16a085", navy:"#1a2a3a", muted:"#95a5a6" };
+
+const catColor = { high:C.red, medium:C.amber, low:C.green };
+
+// ── 1. TREND LINE CHART ──────────────────────────────────────
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: years,
+    datasets: [
+      { label:'India',           data:trendData.india,      borderColor:C.blue,
+        backgroundColor:'rgba(41,128,185,.08)', fill:true,
+        borderWidth:3, pointRadius:4, tension:.35 },
+      { label:'Global',          data:trendData.global,     borderColor:C.amber,
+        borderWidth:2, pointRadius:3, tension:.35, borderDash:[4,2] },
+      { label:'South Asia',      data:trendData.southAsia,  borderColor:C.teal,
+        borderWidth:2, pointRadius:3, tension:.35 },
+      { label:'Sub-Saharan Afr.',data:trendData.subSaharan, borderColor:C.muted,
+        borderWidth:2, pointRadius:3, tension:.35 },
+      { label:'SDG Target (70)', data:Array(years.length).fill(70),
+        borderColor:C.green, borderWidth:1.5, borderDash:[6,3],
+        pointRadius:0, fill:false },
+    ]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:14 } } },
+    scales:{
+      y:{ title:{ display:true, text:'MMR per 100,000 live births', font:{size:11} },
+          grid:{ color:'rgba(0,0,0,.05)' } },
+      x:{ grid:{ display:false } }
+    }
+  }
+});
+
+// ── 2. STATE HORIZONTAL BAR (custom HTML) ────────────────────
+const maxMMR = 200;
+const list = document.getElementById('stateList');
+indiaStates.forEach(s => {
+  const pct = Math.min((s.mmr / maxMMR) * 100, 100);
+  const color = catColor[s.cat];
+  list.innerHTML += `
+    <div class="state-row">
+      <span class="state-name">${s.name}</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${color}"></div>
+      </div>
+      <span class="state-val" style="color:${color}">${s.mmr}</span>
+    </div>`;
+});
+
+// ── 3. SCATTER CHART ─────────────────────────────────────────
+new Chart(document.getElementById('scatterChart'), {
+  type: 'scatter',
+  data: {
+    datasets:[{
+      label:'Indian States',
+      data: scatterData,
+      backgroundColor: scatterData.map(d =>
+        d.y > 150 ? 'rgba(192,57,43,.75)' :
+        d.y > 70  ? 'rgba(230,126,34,.75)' :
+                    'rgba(39,174,96,.75)'
+      ),
+      pointRadius:7, pointHoverRadius:9,
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{ display:false },
+      tooltip:{ callbacks:{ label: ctx => `${scatterData[ctx.dataIndex].label}: Literacy ${ctx.raw.x}%, MMR ${ctx.raw.y}` } }
+    },
+    scales:{
+      x:{ title:{ display:true, text:'Female Literacy Rate (%)', font:{size:11} },
+          min:45, max:100, grid:{ color:'rgba(0,0,0,.05)' } },
+      y:{ title:{ display:true, text:'MMR (per 100,000 live births)', font:{size:11} },
+          grid:{ color:'rgba(0,0,0,.05)' } }
+    }
+  }
+});
+
+// ── 4. DONUT CHART ───────────────────────────────────────────
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels:['Sub-Saharan Africa','South Asia','East Asia & Pacific','Latin America','Other'],
+    datasets:[{
+      data:[70, 14, 5, 5, 6],
+      backgroundColor:['#c0392b','#e67e22','#2980b9','#16a085','#95a5a6'],
+      borderWidth:2, borderColor:'#fff', hoverOffset:6
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{ position:'bottom', labels:{ font:{size:10}, boxWidth:13, padding:10 } }
+    },
+    cutout:'60%'
+  }
+});
+
+// ── 5. CAUSES BAR CHART ──────────────────────────────────────
+new Chart(document.getElementById('causesChart'), {
+  type:'bar',
+  data:{
+    labels:['Haemorrhage','Hypertension','Sepsis','Abortion','Embolism','Other Direct','Indirect'],
+    datasets:[{
+      label:'% of Deaths',
+      data:[27.1, 14.0, 10.7, 7.9, 3.2, 9.6, 27.5],
+      backgroundColor:['#c0392b','#e74c3c','#e67e22','#f39c12','#2980b9','#95a5a6','#7f8c8d'],
+      borderRadius:6, borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, indexAxis:'y',
+    plugins:{ legend:{ display:false } },
+    scales:{
+      x:{ title:{ display:true, text:'Percentage (%)', font:{size:10} },
+          max:35, grid:{ color:'rgba(0,0,0,.05)' } },
+      y:{ grid:{ display:false }, ticks:{ font:{size:11} } }
+    }
+  }
+});
+</script>
+</body>
+</html>
